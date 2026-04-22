@@ -1,0 +1,2082 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Algorithm Visualizer</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f7f6f2;
+    --surface: #ffffff;
+    --surface2: #f0efe9;
+    --border: #e2e0d8;
+    --text: #1a1917;
+    --text-muted: #7a7870;
+    --accent: #2563eb;
+    --accent-light: #eff6ff;
+    --green: #16a34a;
+    --green-light: #f0fdf4;
+    --red: #dc2626;
+    --red-light: #fef2f2;
+    --amber: #d97706;
+    --amber-light: #fffbeb;
+    --purple: #7c3aed;
+    --purple-light: #f5f3ff;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-lg: 0 4px 16px rgba(0,0,0,0.08);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 60px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.25rem;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+  .logo span { color: var(--accent); }
+
+  .header-badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 0.25rem 0.6rem;
+    border-radius: 20px;
+  }
+
+  /* LAYOUT */
+  .app {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    min-height: calc(100vh - 60px);
+  }
+
+  /* SIDEBAR */
+  aside {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 1.5rem 1rem;
+    position: sticky;
+    top: 60px;
+    height: calc(100vh - 60px);
+    overflow-y: auto;
+  }
+
+  .sidebar-section {
+    margin-bottom: 1.5rem;
+  }
+
+  .sidebar-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 0 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .algo-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    width: 100%;
+    padding: 0.55rem 0.75rem;
+    border: none;
+    background: none;
+    cursor: pointer;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    text-align: left;
+    transition: all 0.15s;
+    font-weight: 400;
+  }
+
+  .algo-btn:hover {
+    background: var(--surface2);
+    color: var(--text);
+  }
+
+  .algo-btn.active {
+    background: var(--accent-light);
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  .algo-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .dot-sort { background: var(--accent); }
+  .dot-graph { background: var(--green); }
+  .dot-dp { background: var(--purple); }
+
+  /* MAIN */
+  main {
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  /* CARD */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+  }
+
+  .card-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .card-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.2rem;
+    letter-spacing: -0.01em;
+  }
+
+  .complexity-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+  }
+
+  .card-body { padding: 1.5rem; }
+
+  /* CONTROLS */
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.83rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: 1px solid transparent;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
+  .btn-primary:hover { background: #1d4ed8; }
+
+  .btn-secondary {
+    background: var(--surface2);
+    color: var(--text);
+    border-color: var(--border);
+  }
+  .btn-secondary:hover { background: var(--border); }
+
+  .btn-ghost {
+    background: none;
+    color: var(--text-muted);
+    border-color: var(--border);
+  }
+  .btn-ghost:hover { background: var(--surface2); color: var(--text); }
+
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  /* SPEED SLIDER */
+  .speed-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: auto;
+  }
+  .speed-label { font-size: 0.78rem; color: var(--text-muted); }
+  input[type=range] {
+    width: 80px;
+    accent-color: var(--accent);
+  }
+
+  /* ARRAY SIZE */
+  .input-group {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .input-group label { font-size: 0.78rem; color: var(--text-muted); }
+  .input-group input[type=number], .input-group input[type=text] {
+    width: 70px;
+    padding: 0.4rem 0.6rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.82rem;
+    background: var(--surface2);
+    color: var(--text);
+  }
+
+  /* SORTING VIZ */
+  #sort-canvas {
+    height: 240px;
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    padding: 0 4px;
+    background: var(--bg);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .bar {
+    flex: 1;
+    border-radius: 4px 4px 0 0;
+    transition: height 0.15s ease, background 0.15s;
+    position: relative;
+    background: #bfdbfe;
+    border: 1px solid #93c5fd;
+  }
+
+  .bar.comparing { background: var(--amber); border-color: var(--amber); }
+  .bar.swapping { background: var(--red); border-color: var(--red); }
+  .bar.sorted { background: var(--green); border-color: #15803d; }
+  .bar.pivot { background: var(--purple); border-color: var(--purple); }
+
+  /* MERGE TREE VIZ */
+  #merge-tree-wrap {
+    display: none;
+    background: var(--bg);
+    border-radius: 10px;
+    padding: 1rem;
+  }
+
+  #merge-tree-canvas {
+    position: relative;
+    min-height: 360px;
+    overflow: auto;
+  }
+
+  .merge-node {
+    position: absolute;
+    transform: translateX(-50%);
+    display: inline-flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.3rem;
+  }
+
+  .merge-array {
+    display: flex;
+    border: 1px solid #a3a3a3;
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--surface);
+  }
+
+  .merge-cell {
+    min-width: 42px;
+    height: 44px;
+    border-right: 1px solid #b7b7b7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 1.05rem;
+    color: #4b5563;
+    padding: 0 0.2rem;
+  }
+
+  .merge-cell:last-child { border-right: none; }
+
+  .merge-index-row {
+    display: flex;
+    justify-content: stretch;
+  }
+
+  .merge-index {
+    min-width: 42px;
+    text-align: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem;
+    color: #6b7280;
+  }
+
+  .merge-node.active .merge-array {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59,130,246,0.15);
+  }
+
+  .merge-node.merged .merge-array {
+    border-color: #16a34a;
+    background: #f0fdf4;
+  }
+
+  .merge-step-panel {
+    max-width: 640px;
+    margin: 0.75rem auto 0;
+    background: #dbeafe;
+    border: 1px solid #bfdbfe;
+    border-left: 6px solid #93c5fd;
+    border-radius: 6px;
+    padding: 0.75rem 0.95rem;
+    color: #334155;
+    line-height: 1.4;
+  }
+
+  .merge-step-title {
+    font-weight: 600;
+    margin-bottom: 0.2rem;
+  }
+
+  .merge-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.8rem;
+    margin-top: 0.85rem;
+  }
+
+  .merge-nav .btn {
+    min-width: 46px;
+    justify-content: center;
+    padding: 0.45rem 0.55rem;
+  }
+
+  .merge-step-counter {
+    font-family: 'DM Mono', monospace;
+    color: #4b5563;
+    min-width: 84px;
+    text-align: center;
+  }
+
+  .sort-info {
+    display: flex;
+    gap: 1.5rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+  }
+  .stat-box {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+  .stat-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
+  .stat-val { font-family: 'DM Mono', monospace; font-size: 1.1rem; font-weight: 500; color: var(--text); }
+
+  /* LEGEND */
+  .legend {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: 0.75rem;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.73rem;
+    color: var(--text-muted);
+  }
+  .legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+  }
+
+  /* STEP MESSAGE */
+  .step-msg {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    font-family: 'DM Mono', monospace;
+    min-height: 1.2em;
+    margin-top: 0.5rem;
+  }
+
+  /* GRAPH VIZ */
+  #graph-canvas {
+    width: 100%;
+    height: 340px;
+    background: var(--bg);
+    border-radius: 8px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  svg.graph-svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .graph-controls-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  /* DP VIZ */
+  .dp-section { display: flex; flex-direction: column; gap: 1.5rem; }
+
+  .dp-table-wrap {
+    overflow-x: auto;
+  }
+
+  .dp-table {
+    border-collapse: collapse;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem;
+  }
+
+  .dp-table th, .dp-table td {
+    width: 44px;
+    height: 38px;
+    text-align: center;
+    border: 1px solid var(--border);
+    transition: background 0.2s;
+  }
+
+  .dp-table th {
+    background: var(--surface2);
+    color: var(--text-muted);
+    font-size: 0.7rem;
+  }
+
+  .dp-table td {
+    background: var(--surface);
+    color: var(--text);
+  }
+
+  .dp-table td.active { background: var(--accent); color: white; }
+  .dp-table td.computed { background: var(--accent-light); color: var(--accent); }
+  .dp-table td.highlight { background: var(--amber-light); border-color: var(--amber); }
+
+  .dp-inputs {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .dp-inputs input[type=text] {
+    width: 220px;
+    padding: 0.4rem 0.6rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.82rem;
+    background: var(--surface2);
+  }
+
+  /* TABS */
+  .tabs {
+    display: flex;
+    gap: 0.25rem;
+    border-bottom: 1px solid var(--border);
+    padding: 0 1.5rem;
+    background: var(--surface);
+    border-radius: 12px 12px 0 0;
+  }
+
+  .tab {
+    padding: 0.75rem 1rem;
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    background: none;
+    color: var(--text-muted);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.15s;
+  }
+
+  .tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* INFO BOX */
+  .info-box {
+    font-size: 0.8rem;
+    line-height: 1.6;
+    color: var(--text-muted);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    margin-top: 0.75rem;
+  }
+  .info-box strong { color: var(--text); }
+
+  .pseudocode-box {
+    margin-top: 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--surface);
+  }
+
+  .pseudocode-header {
+    padding: 0.55rem 0.9rem;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+
+  .pseudocode {
+    margin: 0;
+    padding: 0.8rem 1rem;
+    background: #fafaf8;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78rem;
+    line-height: 1.5;
+    color: #334155;
+    white-space: pre-wrap;
+  }
+
+  .backend-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+
+  .backend-status {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.76rem;
+    color: #155e75;
+    background: #ecfeff;
+    border: 1px solid #a5f3fc;
+    border-left: 4px solid #06b6d4;
+    border-radius: 6px;
+    padding: 0.6rem 0.75rem;
+    min-height: 2.2rem;
+  }
+
+  .backend-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .mini-card {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #fbfbf9;
+    padding: 0.75rem;
+  }
+
+  .mini-title {
+    font-size: 0.74rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 0.45rem;
+    font-weight: 600;
+  }
+
+  .benchmark-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.74rem;
+  }
+
+  .benchmark-table th,
+  .benchmark-table td {
+    border: 1px solid var(--border);
+    padding: 0.38rem 0.45rem;
+    text-align: left;
+  }
+
+  .benchmark-table th {
+    background: var(--surface2);
+    color: var(--text-muted);
+  }
+
+  .history-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    max-height: 220px;
+    overflow: auto;
+  }
+
+  .history-item {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    color: #374151;
+    border: 1px solid var(--border);
+    background: #ffffff;
+    border-radius: 6px;
+    padding: 0.4rem 0.5rem;
+  }
+
+  @media (max-width: 980px) {
+    .backend-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* GRAPH NODE */
+  .gnode circle { stroke-width: 2; stroke: var(--border); transition: all 0.3s; }
+  .gnode text { font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 500; pointer-events: none; }
+  .gedge { stroke: var(--border); stroke-width: 2; transition: stroke 0.3s; }
+  .gedge-label { font-family: 'DM Mono', monospace; font-size: 11px; fill: var(--text-muted); }
+
+  .gnode.unvisited circle { fill: #f0efe9; stroke: #c9c7be; }
+  .gnode.visiting circle { fill: var(--amber); stroke: #b45309; }
+  .gnode.visited circle { fill: var(--green); stroke: #15803d; }
+  .gnode.start circle { fill: var(--accent); stroke: #1d4ed8; }
+  .gedge.active { stroke: var(--amber); stroke-width: 3; }
+  .gedge.visited { stroke: var(--green); stroke-width: 2.5; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Algorithm <span>Visualizer</span></div>
+  <div class="header-badge">DAA Interactive</div>
+</header>
+
+<div class="app">
+  <aside>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Sorting</div>
+      <button class="algo-btn active" onclick="selectAlgo('bubble')" id="btn-bubble">
+        <span class="algo-dot dot-sort"></span>Bubble Sort
+      </button>
+      <button class="algo-btn" onclick="selectAlgo('selection')" id="btn-selection">
+        <span class="algo-dot dot-sort"></span>Selection Sort
+      </button>
+      <button class="algo-btn" onclick="selectAlgo('insertion')" id="btn-insertion">
+        <span class="algo-dot dot-sort"></span>Insertion Sort
+      </button>
+      <button class="algo-btn" onclick="selectAlgo('merge')" id="btn-merge">
+        <span class="algo-dot dot-sort"></span>Merge Sort
+      </button>
+      <button class="algo-btn" onclick="selectAlgo('quick')" id="btn-quick">
+        <span class="algo-dot dot-sort"></span>Quick Sort
+      </button>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Graph</div>
+      <button class="algo-btn" onclick="selectAlgo('bfs')" id="btn-bfs">
+        <span class="algo-dot dot-graph"></span>BFS
+      </button>
+      <button class="algo-btn" onclick="selectAlgo('dfs')" id="btn-dfs">
+        <span class="algo-dot dot-graph"></span>DFS
+      </button>
+      <button class="algo-btn" onclick="selectAlgo('dijkstra')" id="btn-dijkstra">
+        <span class="algo-dot dot-graph"></span>Dijkstra's
+      </button>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Dynamic Programming</div>
+      <button class="algo-btn" onclick="selectAlgo('knapsack')" id="btn-knapsack">
+        <span class="algo-dot dot-dp"></span>0/1 Knapsack
+      </button>
+      <button class="algo-btn" onclick="selectAlgo('lcs')" id="btn-lcs">
+        <span class="algo-dot dot-dp"></span>LCS
+      </button>
+    </div>
+  </aside>
+
+  <main id="main-area">
+    <!-- Sorting View -->
+    <div id="view-sort">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title" id="sort-title">Bubble Sort</div>
+          </div>
+          <span class="complexity-tag" id="sort-complexity">O(n²) time · O(1) space</span>
+        </div>
+        <div class="card-body">
+          <div class="controls" style="margin-bottom:1rem;">
+            <button class="btn btn-primary" id="sort-play-btn" onclick="sortPlay()">▶️ Play</button>
+            <button class="btn btn-ghost" onclick="sortPause()" id="sort-pause-btn">⏸ Pause</button>
+            <button class="btn btn-ghost" onclick="sortStep()" id="sort-step-btn">⏭ Step</button>
+            <button class="btn btn-secondary" onclick="sortReset()">↺ Reset</button>
+            <button class="btn btn-secondary" onclick="generateArray()">⚄ New Array</button>
+            <button class="btn btn-secondary" onclick="backendSortCurrent()">Backend Solve</button>
+            <button class="btn btn-secondary" onclick="benchmarkSorts()">Benchmark Sorts</button>
+            <div class="input-group">
+              <label>Size</label>
+              <input type="number" id="array-size" value="30" min="5" max="80" onchange="generateArray()">
+            </div>
+            <div class="speed-group">
+              <span class="speed-label">Speed</span>
+              <input type="range" id="speed-slider" min="1" max="10" value="5">
+            </div>
+          </div>
+          <div id="sort-canvas"></div>
+          <div id="merge-tree-wrap">
+            <div id="merge-tree-canvas"></div>
+            <div class="merge-step-panel">
+              <div class="merge-step-title">Steps:</div>
+              <div id="merge-step-msg">Split the selected array (as evenly as possible)</div>
+            </div>
+            <div class="merge-nav">
+              <button class="btn btn-ghost" id="merge-first-btn" onclick="mergeGoFirst()">&#171;</button>
+              <button class="btn btn-ghost" id="merge-prev-btn" onclick="mergeGoPrev()">&#8249;</button>
+              <div class="merge-step-counter" id="merge-step-counter">0 / 0</div>
+              <button class="btn btn-ghost" id="merge-next-btn" onclick="mergeGoNext()">&#8250;</button>
+              <button class="btn btn-ghost" id="merge-last-btn" onclick="mergeGoLast()">&#187;</button>
+            </div>
+          </div>
+          <div class="legend" id="sort-legend">
+            <div class="legend-item"><div class="legend-color" style="background:#bfdbfe;border:1px solid #93c5fd"></div>Unsorted</div>
+            <div class="legend-item"><div class="legend-color" style="background:var(--amber)"></div>Comparing</div>
+            <div class="legend-item"><div class="legend-color" style="background:var(--red)"></div>Swapping</div>
+            <div class="legend-item"><div class="legend-color" style="background:var(--purple)"></div>Pivot</div>
+            <div class="legend-item"><div class="legend-color" style="background:var(--green)"></div>Sorted</div>
+          </div>
+          <div class="step-msg" id="step-msg">Press Play to start visualization</div>
+          <div class="sort-info" id="sort-stats">
+            <div class="stat-box"><div class="stat-label">Comparisons</div><div class="stat-val" id="stat-comp">0</div></div>
+            <div class="stat-box"><div class="stat-label">Swaps</div><div class="stat-val" id="stat-swap">0</div></div>
+            <div class="stat-box"><div class="stat-label">Array Size</div><div class="stat-val" id="stat-size">30</div></div>
+          </div>
+          <div class="info-box" id="sort-desc">
+            <strong>Bubble Sort:</strong> Repeatedly steps through the list, compares adjacent elements and swaps them if they are in wrong order. The largest elements "bubble up" to the end with each pass.
+          </div>
+          <div class="pseudocode-box">
+            <div class="pseudocode-header">Pseudocode</div>
+            <pre class="pseudocode" id="sort-pseudocode"></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Graph View -->
+    <div id="view-graph" style="display:none">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title" id="graph-title">Breadth-First Search</div>
+          <span class="complexity-tag" id="graph-complexity">O(V + E)</span>
+        </div>
+        <div class="card-body">
+          <div class="graph-controls-row" style="margin-bottom:1rem;">
+            <button class="btn btn-primary" onclick="graphPlay()">▶️ Play</button>
+            <button class="btn btn-ghost" onclick="graphPause()">⏸ Pause</button>
+            <button class="btn btn-secondary" onclick="graphReset()">↺ Reset</button>
+            <button class="btn btn-secondary" onclick="generateGraph()">⚄ New Graph</button>
+            <button class="btn btn-secondary" onclick="backendGraphCurrent()">Backend Solve</button>
+            <div class="input-group">
+              <label>Start Node</label>
+              <input type="number" id="start-node" value="0" min="0" max="7">
+            </div>
+            <div class="speed-group">
+              <span class="speed-label">Speed</span>
+              <input type="range" id="graph-speed" min="1" max="10" value="4">
+            </div>
+          </div>
+          <div id="graph-canvas">
+            <svg class="graph-svg" id="graph-svg"></svg>
+          </div>
+          <div class="step-msg" id="graph-msg">Press Play to start traversal</div>
+          <div class="sort-info">
+            <div class="stat-box"><div class="stat-label">Visited</div><div class="stat-val" id="g-visited">0</div></div>
+            <div class="stat-box"><div class="stat-label">Queue/Stack</div><div class="stat-val" id="g-queue">[]</div></div>
+          </div>
+          <div class="info-box" id="graph-desc">
+            <strong>BFS:</strong> Explores all neighbors at the present depth before moving to nodes at next depth. Uses a queue. Guarantees shortest path in unweighted graphs.
+          </div>
+          <div class="pseudocode-box">
+            <div class="pseudocode-header">Pseudocode</div>
+            <pre class="pseudocode" id="graph-pseudocode"></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DP View -->
+    <div id="view-dp" style="display:none">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title" id="dp-title">0/1 Knapsack</div>
+          <span class="complexity-tag" id="dp-complexity">O(nW)</span>
+        </div>
+        <div class="card-body">
+          <div id="dp-knapsack-panel">
+            <div class="dp-inputs" style="margin-bottom:1rem;">
+              <div class="input-group">
+                <label>Weights</label>
+                <input type="text" id="ks-weights" value="2,3,4,5" style="width:130px">
+              </div>
+              <div class="input-group">
+                <label>Values</label>
+                <input type="text" id="ks-values" value="3,4,5,6" style="width:130px">
+              </div>
+              <div class="input-group">
+                <label>Capacity</label>
+                <input type="number" id="ks-capacity" value="5" min="1" max="20" style="width:60px">
+              </div>
+              <button class="btn btn-primary" onclick="knapsackPlay()">▶️ Visualize</button>
+              <button class="btn btn-secondary" onclick="backendKnapsackSolve()">Backend Solve</button>
+              <button class="btn btn-secondary" onclick="knapsackReset()">↺ Reset</button>
+            </div>
+            <div class="dp-table-wrap">
+              <table class="dp-table" id="ks-table"></table>
+            </div>
+            <div class="step-msg" id="dp-msg">Configure and press Visualize</div>
+            <div class="sort-info">
+              <div class="stat-box"><div class="stat-label">Max Profit</div><div class="stat-val" id="ks-result">—</div></div>
+              <div class="stat-box"><div class="stat-label">Items</div><div class="stat-val" id="ks-items">—</div></div>
+            </div>
+          </div>
+          <div id="dp-lcs-panel" style="display:none">
+            <div class="dp-inputs" style="margin-bottom:1rem;">
+              <div class="input-group">
+                <label>String 1</label>
+                <input type="text" id="lcs-s1" value="ABCBDAB" style="width:130px">
+              </div>
+              <div class="input-group">
+                <label>String 2</label>
+                <input type="text" id="lcs-s2" value="BDCAB" style="width:130px">
+              </div>
+              <button class="btn btn-primary" onclick="lcsPlay()">▶️ Visualize</button>
+              <button class="btn btn-secondary" onclick="backendLcsSolve()">Backend Solve</button>
+              <button class="btn btn-secondary" onclick="lcsReset()">↺ Reset</button>
+            </div>
+            <div class="dp-table-wrap">
+              <table class="dp-table" id="lcs-table"></table>
+            </div>
+            <div class="step-msg" id="lcs-msg">Configure and press Visualize</div>
+            <div class="sort-info">
+              <div class="stat-box"><div class="stat-label">LCS Length</div><div class="stat-val" id="lcs-result">—</div></div>
+              <div class="stat-box"><div class="stat-label">LCS String</div><div class="stat-val" id="lcs-str">—</div></div>
+            </div>
+          </div>
+          <div class="info-box" id="dp-desc">
+            <strong>0/1 Knapsack:</strong> Given items with weights and values, find the maximum value achievable within a weight limit. Each item can be taken at most once. DP table stores optimal values for each sub-problem.
+          </div>
+          <div class="pseudocode-box">
+            <div class="pseudocode-header">Pseudocode</div>
+            <pre class="pseudocode" id="dp-pseudocode"></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Backend Lab</div>
+      </div>
+      <div class="card-body backend-panel">
+        <div class="controls">
+          <button class="btn btn-secondary" onclick="refreshBackendHistory()">Refresh History</button>
+          <button class="btn btn-secondary" onclick="benchmarkSorts()">Run Sort Benchmark</button>
+        </div>
+        <div class="backend-status" id="backend-status">Ready. Use Backend Solve buttons to execute algorithms on the Django API.</div>
+        <div class="backend-grid">
+          <div class="mini-card">
+            <div class="mini-title">Sort Benchmark</div>
+            <div id="benchmark-wrap">Run a benchmark to compare sorting algorithm runtime on the current array.</div>
+          </div>
+          <div class="mini-card">
+            <div class="mini-title">Recent Backend Runs</div>
+            <ul class="history-list" id="history-list"></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+// ===================== STATE =====================
+let currentAlgo = 'bubble';
+let arr = [];
+let sortSteps = [];
+let stepIndex = 0;
+let sortInterval = null;
+let sortRunning = false;
+let comparisons = 0, swaps = 0;
+let mergeCurrentStep = 0;
+
+// Graph
+let graphNodes = [];
+let graphEdges = [];
+let graphSteps = [];
+let graphStepIdx = 0;
+let graphInterval = null;
+
+// Backend integration
+let backendHistoryTimer = null;
+
+// ===================== ALGO SELECTION =====================
+function selectAlgo(name) {
+  currentAlgo = name;
+  document.querySelectorAll('.algo-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('btn-' + name).classList.add('active');
+
+  const sortAlgos = ['bubble','selection','insertion','merge','quick'];
+  const graphAlgos = ['bfs','dfs','dijkstra'];
+  const dpAlgos = ['knapsack','lcs'];
+
+  document.getElementById('view-sort').style.display = sortAlgos.includes(name) ? '' : 'none';
+  document.getElementById('view-graph').style.display = graphAlgos.includes(name) ? '' : 'none';
+  document.getElementById('view-dp').style.display = dpAlgos.includes(name) ? '' : 'none';
+
+  if (sortAlgos.includes(name)) initSort(name);
+  if (graphAlgos.includes(name)) initGraph(name);
+  if (dpAlgos.includes(name)) initDP(name);
+}
+
+// ===================== SORTING =====================
+const sortMeta = {
+  bubble: {
+    title:'Bubble Sort',
+    complexity:'O(n²) time · O(1) space',
+    desc:'<strong>Bubble Sort:</strong> Repeatedly steps through the list, compares adjacent elements and swaps them if they are in the wrong order. Largest elements bubble to the end.',
+    pseudocode:`BubbleSort(A):
+  n <- length(A)
+  for i <- 0 to n - 2:
+    for j <- 0 to n - i - 2:
+      if A[j] > A[j + 1]:
+        swap A[j], A[j + 1]`
+  },
+  selection: {
+    title:'Selection Sort',
+    complexity:'O(n²) time · O(1) space',
+    desc:'<strong>Selection Sort:</strong> Finds the minimum element in unsorted portion and places it at the beginning. Makes at most n swaps — efficient when writes are costly.',
+    pseudocode:`SelectionSort(A):
+  n <- length(A)
+  for i <- 0 to n - 2:
+    minIdx <- i
+    for j <- i + 1 to n - 1:
+      if A[j] < A[minIdx]:
+        minIdx <- j
+    if minIdx != i:
+      swap A[i], A[minIdx]`
+  },
+  insertion: {
+    title:'Insertion Sort',
+    complexity:'O(n²) time · O(1) space',
+    desc:'<strong>Insertion Sort:</strong> Builds sorted array one element at a time by inserting each element into its correct position. Efficient for small or nearly sorted arrays.',
+    pseudocode:`InsertionSort(A):
+  n <- length(A)
+  for i <- 1 to n - 1:
+    key <- A[i]
+    j <- i - 1
+    while j >= 0 and A[j] > key:
+      A[j + 1] <- A[j]
+      j <- j - 1
+    A[j + 1] <- key`
+  },
+  merge: {
+    title:'Merge Sort',
+    complexity:'O(n log n) time · O(n) space',
+    desc:'<strong>Merge Sort:</strong> Divide and conquer — splits array into halves, recursively sorts each half, then merges. Guarantees O(n log n) in all cases.',
+    pseudocode:`MergeSort(A, l, r):
+  if l >= r: return
+  m <- floor((l + r) / 2)
+  MergeSort(A, l, m)
+  MergeSort(A, m + 1, r)
+  Merge(A, l, m, r)
+
+Merge(A, l, m, r):
+  L <- A[l..m], R <- A[m+1..r]
+  merge L and R back into A[l..r] in sorted order`
+  },
+  quick: {
+    title:'Quick Sort',
+    complexity:'O(n log n) avg · O(n²) worst',
+    desc:'<strong>Quick Sort:</strong> Picks a pivot, partitions array so elements < pivot come before and > pivot come after. Recursively sorts partitions. Typically fastest in practice.',
+    pseudocode:`QuickSort(A, low, high):
+  if low < high:
+    p <- Partition(A, low, high)
+    QuickSort(A, low, p - 1)
+    QuickSort(A, p + 1, high)
+
+Partition(A, low, high):
+  pivot <- A[high]
+  i <- low - 1
+  for j <- low to high - 1:
+    if A[j] <= pivot:
+      i <- i + 1
+      swap A[i], A[j]
+  swap A[i + 1], A[high]
+  return i + 1`
+  },
+};
+
+function initSort(name) {
+  stopSort();
+  const m = sortMeta[name];
+  document.getElementById('sort-title').textContent = m.title;
+  document.getElementById('sort-complexity').textContent = m.complexity;
+  document.getElementById('sort-desc').innerHTML = m.desc;
+  document.getElementById('sort-pseudocode').textContent = m.pseudocode;
+
+  const sizeInput = document.getElementById('array-size');
+  if (name === 'merge') {
+    sizeInput.max = 16;
+    if (parseInt(sizeInput.value) > 16) sizeInput.value = 8;
+  } else {
+    sizeInput.max = 80;
+  }
+
+  updateSortModeUI();
+  generateArray();
+}
+
+function updateSortModeUI() {
+  const isMerge = currentAlgo === 'merge';
+  const playBtn = document.getElementById('sort-play-btn');
+  const pauseBtn = document.getElementById('sort-pause-btn');
+  const stepBtn = document.getElementById('sort-step-btn');
+
+  document.getElementById('sort-canvas').style.display = isMerge ? 'none' : 'flex';
+  document.getElementById('merge-tree-wrap').style.display = isMerge ? 'block' : 'none';
+  document.getElementById('sort-legend').style.display = isMerge ? 'none' : 'flex';
+  document.getElementById('sort-stats').style.display = isMerge ? 'none' : 'flex';
+  document.getElementById('step-msg').style.display = isMerge ? 'none' : 'block';
+
+  playBtn.textContent = isMerge ? 'Visualize' : '▶️ Play';
+  pauseBtn.style.display = isMerge ? 'none' : 'inline-flex';
+  stepBtn.textContent = isMerge ? 'Next Step' : '⏭ Step';
+}
+
+function generateArray() {
+  stopSort();
+  const sizeInput = document.getElementById('array-size');
+  const maxSize = parseInt(sizeInput.max) || 80;
+  const n = Math.min(maxSize, parseInt(sizeInput.value) || 30);
+  sizeInput.value = n;
+  document.getElementById('stat-size').textContent = n;
+  arr = Array.from({length: n}, () => Math.floor(Math.random() * 95) + 5);
+  comparisons = 0; swaps = 0;
+  updateStats();
+  document.getElementById('step-msg').textContent = 'Press Play to start visualization';
+  buildSteps();
+  stepIndex = 0;
+  if (currentAlgo === 'merge') {
+    mergeCurrentStep = 0;
+    renderMergeStep(mergeCurrentStep);
+  } else {
+    renderBars(arr, [], [], [], []);
+  }
+}
+
+function buildSteps() {
+  const a = [...arr];
+  if (currentAlgo === 'bubble') sortSteps = bubbleSteps(a);
+  else if (currentAlgo === 'selection') sortSteps = selectionSteps(a);
+  else if (currentAlgo === 'insertion') sortSteps = insertionSteps(a);
+  else if (currentAlgo === 'merge') sortSteps = mergeSteps(a);
+  else if (currentAlgo === 'quick') sortSteps = quickSteps(a);
+}
+
+function bubbleSteps(a) {
+  const steps = [], n = a.length;
+  const sorted = [];
+  for (let i = 0; i < n - 1; i++) {
+    for (let j = 0; j < n - i - 1; j++) {
+      steps.push({arr:[...a], comparing:[j,j+1], swapping:[], sorted:[...sorted], pivot:[], msg:`Comparing a[${j}]=${a[j]} and a[${j+1}]=${a[j+1]}`});
+      if (a[j] > a[j+1]) {
+        [a[j],a[j+1]] = [a[j+1],a[j]];
+        steps.push({arr:[...a], comparing:[], swapping:[j,j+1], sorted:[...sorted], pivot:[], msg:`Swapped → a[${j}]=${a[j]}, a[${j+1}]=${a[j+1]}`});
+      }
+    }
+    sorted.push(n-1-i);
+  }
+  sorted.push(0);
+  steps.push({arr:[...a], comparing:[], swapping:[], sorted:[...Array(n).keys()], pivot:[], msg:'✓ Array sorted!'});
+  return steps;
+}
+
+function selectionSteps(a) {
+  const steps = [], n = a.length;
+  const sorted = [];
+  for (let i = 0; i < n - 1; i++) {
+    let minIdx = i;
+    for (let j = i + 1; j < n; j++) {
+      steps.push({arr:[...a], comparing:[minIdx,j], swapping:[], sorted:[...sorted], pivot:[i], msg:`Finding min: a[${j}]=${a[j]} vs current min a[${minIdx}]=${a[minIdx]}`});
+      if (a[j] < a[minIdx]) minIdx = j;
+    }
+    if (minIdx !== i) {
+      [a[i],a[minIdx]] = [a[minIdx],a[i]];
+      steps.push({arr:[...a], comparing:[], swapping:[i,minIdx], sorted:[...sorted], pivot:[], msg:`Placed min=${a[i]} at position ${i}`});
+    }
+    sorted.push(i);
+  }
+  sorted.push(n-1);
+  steps.push({arr:[...a], comparing:[], swapping:[], sorted:[...Array(n).keys()], pivot:[], msg:'✓ Array sorted!'});
+  return steps;
+}
+
+function insertionSteps(a) {
+  const steps = [], n = a.length;
+  const sorted = [0];
+  for (let i = 1; i < n; i++) {
+    let key = a[i], j = i - 1;
+    steps.push({arr:[...a], comparing:[i], swapping:[], sorted:[...sorted], pivot:[], msg:`Key = ${key}, inserting into sorted portion`});
+    while (j >= 0 && a[j] > key) {
+      steps.push({arr:[...a], comparing:[j,j+1], swapping:[], sorted:[...sorted], pivot:[], msg:`a[${j}]=${a[j]} > ${key}, shift right`});
+      a[j+1] = a[j];
+      a[j] = key;
+      steps.push({arr:[...a], comparing:[], swapping:[j,j+1], sorted:[...sorted], pivot:[], msg:`Shifted a[${j}] right`});
+      j--;
+    }
+    a[j+1] = key;
+    sorted.push(i);
+  }
+  steps.push({arr:[...a], comparing:[], swapping:[], sorted:[...Array(n).keys()], pivot:[], msg:'✓ Array sorted!'});
+  return steps;
+}
+
+function mergeSteps(a) {
+  const steps = [];
+  const nodes = [];
+  const visible = new Set();
+  const merged = new Set();
+
+  function nodeId(l, r) { return `${l}-${r}`; }
+
+  function build(l, r, depth) {
+    const id = nodeId(l, r);
+    const node = { id, l, r, depth, left: null, right: null };
+    nodes.push(node);
+    if (l < r) {
+      const m = Math.floor((l + r) / 2);
+      node.left = build(l, m, depth + 1).id;
+      node.right = build(m + 1, r, depth + 1).id;
+    }
+    return node;
+  }
+
+  function pushStep(activeId, msg) {
+    steps.push({
+      nodes: nodes.map(n => ({ ...n, values: a.slice(n.l, n.r + 1) })),
+      visibleNodeIds: [...visible],
+      mergedNodeIds: [...merged],
+      activeId,
+      msg
+    });
+  }
+
+  const root = build(0, a.length - 1, 0);
+  visible.add(root.id);
+  pushStep(root.id, 'Start with the full array.');
+
+  function recurse(l, r) {
+    const id = nodeId(l, r);
+    if (l === r) {
+      pushStep(id, `Base case: single element ${a[l]} at index ${l}`);
+      merged.add(id);
+      return;
+    }
+
+    const m = Math.floor((l + r) / 2);
+    const leftId = nodeId(l, m);
+    const rightId = nodeId(m + 1, r);
+    visible.add(leftId);
+    visible.add(rightId);
+    pushStep(id, `Split array [${l}..${r}] into [${l}..${m}] and [${m + 1}..${r}]`);
+
+    recurse(l, m);
+    recurse(m + 1, r);
+
+    const L = a.slice(l, m + 1);
+    const R = a.slice(m + 1, r + 1);
+    let i = 0, j = 0, k = l;
+    pushStep(id, `Merge sorted halves [${l}..${m}] and [${m + 1}..${r}]`);
+
+    while (i < L.length && j < R.length) {
+      if (L[i] <= R[j]) a[k++] = L[i++];
+      else a[k++] = R[j++];
+      pushStep(id, `Build merged array for [${l}..${r}]`);
+    }
+    while (i < L.length) {
+      a[k++] = L[i++];
+      pushStep(id, `Copy remaining value into [${l}..${r}]`);
+    }
+    while (j < R.length) {
+      a[k++] = R[j++];
+      pushStep(id, `Copy remaining value into [${l}..${r}]`);
+    }
+    merged.add(id);
+    pushStep(id, `Merged segment [${l}..${r}] is now sorted`);
+  }
+
+  recurse(0, a.length - 1);
+  pushStep(root.id, 'Merge Sort complete: full array sorted.');
+  return steps;
+}
+
+function renderMergeStep(stepIdx) {
+  const step = sortSteps[stepIdx];
+  if (!step) return;
+  const canvas = document.getElementById('merge-tree-canvas');
+  canvas.innerHTML = '';
+
+  const visibleSet = new Set(step.visibleNodeIds || []);
+  const mergedSet = new Set(step.mergedNodeIds || []);
+  const n = arr.length;
+  const depthCount = Math.max(...step.nodes.map(nr => nr.depth)) + 1;
+  const cellW = Math.max(34, Math.min(54, Math.floor(640 / Math.max(1, n))));
+  const treeWidth = Math.max(canvas.clientWidth - 12, n * (cellW + 2) + 140);
+  const rowH = 92;
+  canvas.style.minHeight = `${Math.max(320, depthCount * rowH + 24)}px`;
+
+  step.nodes.forEach(node => {
+    if (!visibleSet.has(node.id)) return;
+    const len = node.r - node.l + 1;
+    const nodeWidth = len * cellW;
+    const centerX = ((node.l + node.r + 1) / 2) * (treeWidth / n);
+
+    const wrap = document.createElement('div');
+    wrap.className = 'merge-node';
+    if (node.id === step.activeId) wrap.classList.add('active');
+    if (mergedSet.has(node.id)) wrap.classList.add('merged');
+    wrap.style.left = `${centerX}px`;
+    wrap.style.top = `${node.depth * rowH + 6}px`;
+
+    const arrayEl = document.createElement('div');
+    arrayEl.className = 'merge-array';
+    arrayEl.style.width = `${nodeWidth}px`;
+    node.values.forEach(v => {
+      const cell = document.createElement('div');
+      cell.className = 'merge-cell';
+      cell.style.minWidth = `${cellW}px`;
+      cell.textContent = v;
+      arrayEl.appendChild(cell);
+    });
+
+    const idxRow = document.createElement('div');
+    idxRow.className = 'merge-index-row';
+    idxRow.style.width = `${nodeWidth}px`;
+    for (let i = 0; i < len; i++) {
+      const idx = document.createElement('div');
+      idx.className = 'merge-index';
+      idx.style.minWidth = `${cellW}px`;
+      idx.textContent = i;
+      idxRow.appendChild(idx);
+    }
+
+    wrap.appendChild(arrayEl);
+    wrap.appendChild(idxRow);
+    canvas.appendChild(wrap);
+  });
+
+  document.getElementById('merge-step-msg').textContent = step.msg;
+  document.getElementById('merge-step-counter').textContent = `${stepIdx + 1} / ${sortSteps.length}`;
+  updateMergeNavButtons();
+}
+
+function updateMergeNavButtons() {
+  const first = document.getElementById('merge-first-btn');
+  const prev = document.getElementById('merge-prev-btn');
+  const next = document.getElementById('merge-next-btn');
+  const last = document.getElementById('merge-last-btn');
+  if (!sortSteps.length) {
+    first.disabled = prev.disabled = next.disabled = last.disabled = true;
+    return;
+  }
+  first.disabled = prev.disabled = mergeCurrentStep <= 0;
+  next.disabled = last.disabled = mergeCurrentStep >= sortSteps.length - 1;
+}
+
+function mergeGoFirst() {
+  stopSort();
+  if (!sortSteps.length) return;
+  mergeCurrentStep = 0;
+  renderMergeStep(mergeCurrentStep);
+}
+
+function mergeGoPrev() {
+  stopSort();
+  if (!sortSteps.length || mergeCurrentStep <= 0) return;
+  mergeCurrentStep--;
+  renderMergeStep(mergeCurrentStep);
+}
+
+function mergeGoNext() {
+  stopSort();
+  if (!sortSteps.length || mergeCurrentStep >= sortSteps.length - 1) return;
+  mergeCurrentStep++;
+  renderMergeStep(mergeCurrentStep);
+}
+
+function mergeGoLast() {
+  stopSort();
+  if (!sortSteps.length) return;
+  mergeCurrentStep = sortSteps.length - 1;
+  renderMergeStep(mergeCurrentStep);
+}
+
+function quickSteps(a) {
+  const steps = [];
+  function partition(arr, low, high) {
+    const pivotVal = arr[high];
+    let i = low - 1;
+    steps.push({arr:[...arr], comparing:[], swapping:[], sorted:[], pivot:[high], msg:`Pivot = ${pivotVal} at index ${high}`});
+    for (let j = low; j < high; j++) {
+      steps.push({arr:[...arr], comparing:[j, high], swapping:[], sorted:[], pivot:[high], msg:`a[${j}]=${arr[j]} vs pivot=${pivotVal}`});
+      if (arr[j] <= pivotVal) {
+        i++;
+        [arr[i],arr[j]] = [arr[j],arr[i]];
+        if (i !== j) steps.push({arr:[...arr], comparing:[], swapping:[i,j], sorted:[], pivot:[high], msg:`Swap a[${i}]=${arr[i]} and a[${j}]=${arr[j]}`});
+      }
+    }
+    [arr[i+1], arr[high]] = [arr[high], arr[i+1]];
+    steps.push({arr:[...arr], comparing:[], swapping:[i+1, high], sorted:[], pivot:[], msg:`Pivot placed at index ${i+1}`});
+    return i+1;
+  }
+  function quickSort(arr, low, high) {
+    if (low < high) {
+      const pi = partition(arr, low, high);
+      quickSort(arr, low, pi-1);
+      quickSort(arr, pi+1, high);
+    }
+  }
+  quickSort(a, 0, a.length-1);
+  steps.push({arr:[...a], comparing:[], swapping:[], sorted:[...Array(a.length).keys()], pivot:[], msg:'✓ Array sorted!'});
+  return steps;
+}
+
+function renderBars(arrData, comparing, swapping, sorted, pivot) {
+  const canvas = document.getElementById('sort-canvas');
+  const maxVal = Math.max(...arrData);
+  canvas.innerHTML = '';
+  arrData.forEach((v, i) => {
+    const bar = document.createElement('div');
+    bar.className = 'bar';
+    bar.style.height = `${(v/maxVal)*220}px`;
+    if (sorted.includes(i)) bar.classList.add('sorted');
+    else if (swapping.includes(i)) bar.classList.add('swapping');
+    else if (comparing.includes(i)) bar.classList.add('comparing');
+    else if (pivot.includes(i)) bar.classList.add('pivot');
+    canvas.appendChild(bar);
+  });
+}
+
+function getDelay() {
+  const s = parseInt(document.getElementById('speed-slider').value);
+  if (currentAlgo === 'merge') return Math.max(220, 1400 - s * 110);
+  return Math.max(20, 520 - s * 50);
+}
+
+function sortPlay() {
+  if (currentAlgo === 'merge') {
+    if (sortRunning || !sortSteps.length) return;
+    sortRunning = true;
+    sortInterval = setInterval(() => {
+      if (mergeCurrentStep >= sortSteps.length - 1) { stopSort(); return; }
+      mergeCurrentStep++;
+      renderMergeStep(mergeCurrentStep);
+    }, getDelay());
+    return;
+  }
+  if (sortRunning) return;
+  if (stepIndex >= sortSteps.length) { buildSteps(); stepIndex = 0; comparisons = 0; swaps = 0; }
+  sortRunning = true;
+  sortInterval = setInterval(() => {
+    if (stepIndex >= sortSteps.length) { stopSort(); return; }
+    applySortStep();
+  }, getDelay());
+}
+
+function sortPause() { stopSort(); }
+
+function stopSort() {
+  sortRunning = false;
+  clearInterval(sortInterval);
+}
+
+function sortStep() {
+  if (currentAlgo === 'merge') {
+    mergeGoNext();
+    return;
+  }
+  if (stepIndex >= sortSteps.length) return;
+  applySortStep();
+}
+
+function applySortStep() {
+  const step = sortSteps[stepIndex++];
+  if (step.comparing.length) comparisons++;
+  if (step.swapping.length) swaps++;
+  updateStats();
+  renderBars(step.arr, step.comparing, step.swapping, step.sorted, step.pivot);
+  document.getElementById('step-msg').textContent = step.msg;
+}
+
+function updateStats() {
+  document.getElementById('stat-comp').textContent = comparisons;
+  document.getElementById('stat-swap').textContent = swaps;
+}
+
+function sortReset() {
+  stopSort();
+  if (currentAlgo === 'merge') {
+    buildSteps();
+    mergeCurrentStep = 0;
+    renderMergeStep(mergeCurrentStep);
+    return;
+  }
+  stepIndex = 0;
+  comparisons = 0; swaps = 0;
+  updateStats();
+  buildSteps();
+  document.getElementById('step-msg').textContent = 'Press Play to start visualization';
+  renderBars(arr, [], [], [], []);
+}
+
+async function apiJson(url, method = 'GET', payload = null) {
+  const opts = { method, headers: {} };
+  if (payload !== null) {
+    opts.headers['Content-Type'] = 'application/json';
+    opts.body = JSON.stringify(payload);
+  }
+  const resp = await fetch(url, opts);
+  if (!resp.ok) {
+    const msg = await resp.text();
+    throw new Error(msg || `Request failed (${resp.status})`);
+  }
+  return resp.json();
+}
+
+function setBackendStatus(msg, isError = false) {
+  const box = document.getElementById('backend-status');
+  box.textContent = msg;
+  if (isError) {
+    box.style.background = '#fff1f2';
+    box.style.borderColor = '#fecdd3';
+    box.style.borderLeftColor = '#e11d48';
+    box.style.color = '#9f1239';
+  } else {
+    box.style.background = '#ecfeff';
+    box.style.borderColor = '#a5f3fc';
+    box.style.borderLeftColor = '#06b6d4';
+    box.style.color = '#155e75';
+  }
+}
+
+async function backendSortCurrent() {
+  const sortAlgos = ['bubble','selection','insertion','merge','quick'];
+  if (!sortAlgos.includes(currentAlgo)) {
+    setBackendStatus('Backend sort works for sorting algorithms only.', true);
+    return;
+  }
+  try {
+    const data = await apiJson(`/api/sort/${currentAlgo}/`, 'POST', { array: arr });
+    arr = data.sorted.slice();
+    comparisons = 0;
+    swaps = 0;
+    updateStats();
+    buildSteps();
+    stepIndex = sortSteps.length;
+    if (currentAlgo === 'merge') {
+      mergeCurrentStep = sortSteps.length - 1;
+      renderMergeStep(mergeCurrentStep);
+    } else {
+      renderBars(arr, [], [], [...Array(arr.length).keys()], []);
+      document.getElementById('step-msg').textContent = `Backend solve complete in ${data.duration_ms} ms`;
+    }
+    setBackendStatus(`Saved run #${data.run_id}: ${currentAlgo} sorted ${arr.length} items in ${data.duration_ms} ms.`);
+    refreshBackendHistory();
+  } catch (err) {
+    setBackendStatus(`Sort API error: ${err.message}`, true);
+  }
+}
+
+async function benchmarkSorts() {
+  try {
+    const data = await apiJson('/api/sort/benchmark/', 'POST', { array: arr });
+    const rows = data.timings.map((item, idx) =>
+      `<tr><td>${idx + 1}</td><td>${item.algorithm}</td><td>${item.duration_ms}</td></tr>`
+    ).join('');
+    document.getElementById('benchmark-wrap').innerHTML =
+      `<table class="benchmark-table"><thead><tr><th>#</th><th>Algorithm</th><th>ms</th></tr></thead><tbody>${rows}</tbody></table>`;
+    setBackendStatus(`Benchmark complete (#${data.run_id}). Fastest: ${data.timings[0].algorithm} (${data.timings[0].duration_ms} ms)`);
+    refreshBackendHistory();
+  } catch (err) {
+    setBackendStatus(`Benchmark API error: ${err.message}`, true);
+  }
+}
+
+// ===================== GRAPH =====================
+const graphMeta = {
+  bfs: {
+    title:'Breadth-First Search',
+    complexity:'O(V + E)',
+    desc:'<strong>BFS:</strong> Explores all neighbors of the current node before moving to next level. Uses a FIFO queue. Guarantees shortest path in unweighted graphs.',
+    pseudocode:`BFS(G, s):
+  for each vertex v in G:
+    visited[v] <- false
+  create empty queue Q
+  visited[s] <- true
+  enqueue(Q, s)
+  while Q is not empty:
+    u <- dequeue(Q)
+    for each neighbor v of u:
+      if visited[v] = false:
+        visited[v] <- true
+        enqueue(Q, v)`
+  },
+  dfs: {
+    title:'Depth-First Search',
+    complexity:'O(V + E)',
+    desc:'<strong>DFS:</strong> Explores as deep as possible along each branch before backtracking. Uses a stack (or recursion). Good for topological sorting and cycle detection.',
+    pseudocode:`DFS(G, s):
+  for each vertex v in G:
+    visited[v] <- false
+  DFSVisit(s)
+
+DFSVisit(u):
+  visited[u] <- true
+  for each neighbor v of u:
+    if visited[v] = false:
+      DFSVisit(v)`
+  },
+  dijkstra: {
+    title:"Dijkstra's Shortest Path",
+    complexity:'O((V+E) log V)',
+    desc:"<strong>Dijkstra's:</strong> Finds shortest paths from a source node using greedy approach. Maintains a priority queue of distances. Edge weights must be non-negative.",
+    pseudocode:`Dijkstra(G, s):
+  for each vertex v in G:
+    dist[v] <- infinity
+  dist[s] <- 0
+  push (0, s) into min-priority queue PQ
+  while PQ not empty:
+    (d, u) <- extract-min(PQ)
+    if d > dist[u]: continue
+    for each edge (u, v, w):
+      if dist[u] + w < dist[v]:
+        dist[v] <- dist[u] + w
+        push (dist[v], v) into PQ`
+  },
+};
+
+const NODE_POSITIONS = [
+  [150,80],[300,60],[450,80],[560,180],
+  [450,280],[300,300],[150,280],[60,180]
+];
+
+function initGraph(name) {
+  stopGraph();
+  const m = graphMeta[name];
+  document.getElementById('graph-title').textContent = m.title;
+  document.getElementById('graph-complexity').textContent = m.complexity;
+  document.getElementById('graph-desc').innerHTML = m.desc;
+  document.getElementById('graph-pseudocode').textContent = m.pseudocode;
+  generateGraph();
+}
+
+function generateGraph() {
+  stopGraph();
+  graphStepIdx = 0;
+  const n = 8;
+  graphNodes = Array.from({length:n}, (_, i) => ({id:i, x:NODE_POSITIONS[i][0], y:NODE_POSITIONS[i][1], state:'unvisited'}));
+  // Random edges
+  const edgeSet = new Set();
+  const edges = [];
+  const minEdges = n;
+  // Ensure connectivity: chain
+  for (let i=0; i<n-1; i++) {
+    const w = Math.floor(Math.random()*9)+1;
+    edges.push({from:i, to:i+1, weight:w});
+    edgeSet.add(`${i}-${i+1}`);
+    edgeSet.add(`${i+1}-${i}`);
+  }
+  // Random extra edges
+  const attempts = 10;
+  for (let i=0; i<attempts; i++) {
+    const a = Math.floor(Math.random()*n), b = Math.floor(Math.random()*n);
+    if (a!==b && !edgeSet.has(`${a}-${b}`)) {
+      const w = Math.floor(Math.random()*9)+1;
+      edges.push({from:a, to:b, weight:w});
+      edgeSet.add(`${a}-${b}`); edgeSet.add(`${b}-${a}`);
+    }
+  }
+  graphEdges = edges;
+  buildGraphSteps();
+  renderGraph();
+  document.getElementById('graph-msg').textContent = 'Press Play to start traversal';
+  document.getElementById('g-visited').textContent = '0';
+  document.getElementById('g-queue').textContent = '[]';
+}
+
+function buildGraphSteps() {
+  const startNode = parseInt(document.getElementById('start-node').value) || 0;
+  if (currentAlgo === 'bfs') graphSteps = bfsSteps(startNode);
+  else if (currentAlgo === 'dfs') graphSteps = dfsSteps(startNode);
+  else graphSteps = dijkstraSteps(startNode);
+}
+
+function getAdj(n) {
+  const adj = Array.from({length:n}, ()=>[]);
+  graphEdges.forEach(e => { adj[e.from].push({to:e.to, w:e.weight}); adj[e.to].push({to:e.from, w:e.weight}); });
+  return adj;
+}
+
+function bfsSteps(start) {
+  const n = graphNodes.length, adj = getAdj(n), steps = [];
+  const visited = new Array(n).fill(false);
+  const nodeStates = new Array(n).fill('unvisited');
+  const edgeStates = {};
+  const queue = [start];
+  visited[start] = true; nodeStates[start] = 'start';
+  steps.push({nodeStates:[...nodeStates], edgeStates:{...edgeStates}, queue:[...queue], visited:0, msg:`Start BFS from node ${start}`});
+  while (queue.length) {
+    const u = queue.shift();
+    nodeStates[u] = u === start ? 'start' : 'visited';
+    steps.push({nodeStates:[...nodeStates], edgeStates:{...edgeStates}, queue:[...queue], visited:nodeStates.filter(s=>s==='visited'||s==='start').length, msg:`Visiting node ${u}`});
+    for (const {to} of getAdj(n)[u]) {
+      if (!visited[to]) {
+        visited[to] = true;
+        nodeStates[to] = 'visiting';
+        edgeStates[`${u}-${to}`] = 'active';
+        queue.push(to);
+        steps.push({nodeStates:[...nodeStates], edgeStates:{...edgeStates}, queue:[...queue], visited:nodeStates.filter(s=>s==='visited'||s==='start').length, msg:`Discovered node ${to} from ${u}, added to queue`});
+        edgeStates[`${u}-${to}`] = 'visited';
+      }
+    }
+  }
+  steps.push({nodeStates:[...nodeStates], edgeStates:{...edgeStates}, queue:[], visited:n, msg:'✓ BFS complete!'});
+  return steps;
+}
+
+function dfsSteps(start) {
+  const n = graphNodes.length, adj = getAdj(n), steps = [];
+  const visited = new Array(n).fill(false);
+  const nodeStates = new Array(n).fill('unvisited');
+  const edgeStates = {};
+  const stack = [];
+  function dfs(u) {
+    visited[u] = true;
+    nodeStates[u] = u === start ? 'start' : 'visiting';
+    stack.push(u);
+    steps.push({nodeStates:[...nodeStates], edgeStates:{...edgeStates}, queue:[...stack], visited:nodeStates.filter(s=>s!=='unvisited').length, msg:`Visiting node ${u} (DFS stack: [${stack}])`});
+    for (const {to} of adj[u]) {
+      if (!visited[to]) {
+        edgeStates[`${u}-${to}`] = 'active';
+        steps.push({nodeStates:[...nodeStates], edgeStates:{...edgeStates}, queue:[...stack], visited:nodeStates.filter(s=>s!=='unvisited').length, msg:`Exploring edge ${u}→${to}`});
+        dfs(to);
+        edgeStates[`${u}-${to}`] = 'visited';
+        nodeStates[u] = 'visited';
+      }
+    }
+    stack.pop();
+  }
+  dfs(start);
+  steps.push({nodeStates:[...nodeStates], edgeStates:{...edgeStates}, queue:[], visited:n, msg:'✓ DFS complete!'});
+  return steps;
+}
+
+function dijkstraSteps(start) {
+  const n = graphNodes.length, adj = getAdj(n), steps = [];
+  const dist = new Array(n).fill(Infinity);
+  const visited = new Array(n).fill(false);
+  const nodeStates = new Array(n).fill('unvisited');
+  const edgeStates = {};
+  dist[start] = 0; nodeStates[start] = 'start';
+  steps.push({nodeStates:[...nodeStates], edgeStates:{...edgeStates}, queue:[`d[${start}]=0`], visited:0, msg:`Init: dist[${start}]=0, all others ∞`});
+  for (let iter=0; iter<n; iter++) {
+    let u = -1;
+    for (let i=0; i<n; i++) if (!visited[i] && (u===-1 || dist[i]<dist[u])) u=i;
+    if (u===-1 || dist[u]===Infinity) break;
+    visited[u] = true;
+    if (u!==start) nodeStates[u] = 'visited';
+    steps.push({nodeStates:[...nodeStates], edgeStates:{...edgeStates}, queue:dist.map((d,i)=>d<Infinity?`d[${i}]=${d}`:'').filter(Boolean), visited:nodeStates.filter(s=>s!=='unvisited').length, msg:`Process node ${u}, dist=${dist[u]}`});
+    for (const {to, w} of adj[u]) {
+      if (!visited[to] && dist[u]+w < dist[to]) {
+        edgeStates[`${u}-${to}`] = 'active';
+        dist[to] = dist[u]+w;
+        nodeStates[to] = 'visiting';
+        steps.push({nodeStates:[...nodeStates], edgeStates:{...edgeStates}, queue:dist.map((d,i)=>d<Infinity?`d[${i}]=${d}`:'').filter(Boolean), visited:nodeStates.filter(s=>s!=='unvisited').length, msg:`Relax: dist[${to}] = ${dist[to]} via ${u}`});
+        edgeStates[`${u}-${to}`] = 'visited';
+      }
+    }
+  }
+  steps.push({nodeStates:[...nodeStates], edgeStates:{...edgeStates}, queue:[], visited:n, msg:`✓ Dijkstra complete! Distances: [${dist.map(d=>d===Infinity?'∞':d).join(', ')}]`});
+  return steps;
+}
+
+function renderGraph(nodeStates, edgeStates) {
+  const svg = document.getElementById('graph-svg');
+  const ns = nodeStates || graphNodes.map(()=>'unvisited');
+  const es = edgeStates || {};
+  svg.innerHTML = '';
+
+  // Draw edges
+  graphEdges.forEach(e => {
+    const a = graphNodes[e.from], b = graphNodes[e.to];
+    const key1 = `${e.from}-${e.to}`, key2 = `${e.to}-${e.from}`;
+    const state = es[key1] || es[key2] || 'none';
+    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1', a.x); line.setAttribute('y1', a.y);
+    line.setAttribute('x2', b.x); line.setAttribute('y2', b.y);
+    line.setAttribute('class', `gedge${state!=='none'?' '+state:''}`);
+    svg.appendChild(line);
+
+    if (currentAlgo === 'dijkstra') {
+      const mx = (a.x+b.x)/2, my = (a.y+b.y)/2;
+      const label = document.createElementNS('http://www.w3.org/2000/svg','text');
+      label.setAttribute('x', mx); label.setAttribute('y', my-5);
+      label.setAttribute('class','gedge-label'); label.setAttribute('text-anchor','middle');
+      label.textContent = e.weight;
+      svg.appendChild(label);
+    }
+  });
+
+  // Draw nodes
+  graphNodes.forEach((node, i) => {
+    const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+    g.setAttribute('class', `gnode ${ns[i]}`);
+
+    const circle = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    circle.setAttribute('cx', node.x); circle.setAttribute('cy', node.y);
+    circle.setAttribute('r', 22);
+    g.appendChild(circle);
+
+    const text = document.createElementNS('http://www.w3.org/2000/svg','text');
+    text.setAttribute('x', node.x); text.setAttribute('y', node.y+5);
+    text.setAttribute('text-anchor','middle');
+    text.setAttribute('fill', ns[i]==='unvisited' ? '#7a7870' : 'white');
+    text.textContent = i;
+    g.appendChild(text);
+    svg.appendChild(g);
+  });
+}
+
+function getGraphDelay() {
+  const s = parseInt(document.getElementById('graph-speed').value);
+  return Math.max(200, 1200 - s*100);
+}
+
+function graphPlay() {
+  if (graphInterval) return;
+  if (graphStepIdx >= graphSteps.length) { buildGraphSteps(); graphStepIdx = 0; }
+  graphInterval = setInterval(() => {
+    if (graphStepIdx >= graphSteps.length) { stopGraph(); return; }
+    applyGraphStep();
+  }, getGraphDelay());
+}
+
+function graphPause() { stopGraph(); }
+function stopGraph() { clearInterval(graphInterval); graphInterval = null; }
+
+function applyGraphStep() {
+  const step = graphSteps[graphStepIdx++];
+  renderGraph(step.nodeStates, step.edgeStates);
+  document.getElementById('graph-msg').textContent = step.msg;
+  document.getElementById('g-visited').textContent = step.visited;
+  document.getElementById('g-queue').textContent = step.queue.length ? '['+step.queue.join(', ')+']' : '[]';
+}
+
+function graphReset() {
+  stopGraph();
+  graphStepIdx = 0;
+  buildGraphSteps();
+  renderGraph();
+  document.getElementById('graph-msg').textContent = 'Press Play to start traversal';
+  document.getElementById('g-visited').textContent = '0';
+  document.getElementById('g-queue').textContent = '[]';
+}
+
+async function backendGraphCurrent() {
+  const graphAlgos = ['bfs', 'dfs', 'dijkstra'];
+  if (!graphAlgos.includes(currentAlgo)) {
+    setBackendStatus('Backend graph solve works for BFS/DFS/Dijkstra only.', true);
+    return;
+  }
+  try {
+    const payload = {
+      node_count: graphNodes.length,
+      start: parseInt(document.getElementById('start-node').value) || 0,
+      edges: graphEdges.map(e => [e.from, e.to, e.weight]),
+    };
+    const data = await apiJson(`/api/graph/${currentAlgo}/`, 'POST', payload);
+    if (data.order) {
+      const nodeStates = graphNodes.map(() => 'unvisited');
+      data.order.forEach((id, idx) => {
+        nodeStates[id] = idx === 0 ? 'start' : 'visited';
+      });
+      renderGraph(nodeStates, {});
+      document.getElementById('graph-msg').textContent = `Order: ${data.order.join(' -> ')}`;
+      document.getElementById('g-visited').textContent = data.order.length;
+      document.getElementById('g-queue').textContent = '[]';
+    } else {
+      document.getElementById('graph-msg').textContent = `Distances: [${data.distances.join(', ')}]`;
+      document.getElementById('g-queue').textContent = '[computed]';
+    }
+    setBackendStatus(`Saved run #${data.run_id}: ${currentAlgo} computed in ${data.duration_ms} ms.`);
+    refreshBackendHistory();
+  } catch (err) {
+    setBackendStatus(`Graph API error: ${err.message}`, true);
+  }
+}
+
+// ===================== DP =====================
+function initDP(name) {
+  const isKnapsack = name === 'knapsack';
+  document.getElementById('dp-knapsack-panel').style.display = isKnapsack ? '' : 'none';
+  document.getElementById('dp-lcs-panel').style.display = isKnapsack ? 'none' : '';
+  if (isKnapsack) {
+    document.getElementById('dp-title').textContent = '0/1 Knapsack';
+    document.getElementById('dp-complexity').textContent = 'O(nW)';
+    document.getElementById('dp-desc').innerHTML = '<strong>0/1 Knapsack:</strong> Given items with weights and values, find the maximum value achievable within a weight limit. Each item can be taken at most once. DP table stores optimal values for each sub-problem.';
+    document.getElementById('dp-pseudocode').textContent = `Knapsack01(weights, values, W):\n  n <- number of items\n  create dp[0..n][0..W], initialize 0\n  for i <- 1 to n:\n    for w <- 0 to W:\n      if weights[i-1] <= w:\n        dp[i][w] <- max(dp[i-1][w], values[i-1] + dp[i-1][w-weights[i-1]])\n      else:\n        dp[i][w] <- dp[i-1][w]\n  return dp[n][W]`;
+    knapsackReset();
+  } else {
+    document.getElementById('dp-title').textContent = 'Longest Common Subsequence';
+    document.getElementById('dp-complexity').textContent = 'O(mn)';
+    document.getElementById('dp-desc').innerHTML = '<strong>LCS:</strong> Find the longest subsequence common to both strings. A subsequence preserves relative order but need not be contiguous. Uses a 2D DP table where dp[i][j] = LCS of first i chars of s1 and j chars of s2.';
+    document.getElementById('dp-pseudocode').textContent = `LCS(s1, s2):\n  m <- length(s1), n <- length(s2)\n  create dp[0..m][0..n], initialize 0\n  for i <- 1 to m:\n    for j <- 1 to n:\n      if s1[i-1] = s2[j-1]:\n        dp[i][j] <- dp[i-1][j-1] + 1\n      else:\n        dp[i][j] <- max(dp[i-1][j], dp[i][j-1])\n\n  // optional reconstruction\n  i <- m, j <- n, ans <- ""\n  while i > 0 and j > 0:\n    if s1[i-1] = s2[j-1]:\n      ans <- s1[i-1] + ans; i--; j--\n    else if dp[i-1][j] >= dp[i][j-1]:\n      i--\n    else:\n      j--\n  return dp[m][n], ans`;
+    lcsReset();
+  }
+}
+
+// KNAPSACK
+function knapsackReset() {
+  document.getElementById('ks-table').innerHTML = '';
+  document.getElementById('dp-msg').textContent = 'Configure and press Visualize';
+  document.getElementById('ks-result').textContent = '—';
+  document.getElementById('ks-items').textContent = '—';
+}
+
+async function knapsackPlay() {
+  const weights = document.getElementById('ks-weights').value.split(',').map(Number).filter(Boolean);
+  const values = document.getElementById('ks-values').value.split(',').map(Number).filter(Boolean);
+  const W = parseInt(document.getElementById('ks-capacity').value);
+  if (weights.length !== values.length || !weights.length) {
+    document.getElementById('dp-msg').textContent = 'Error: weights and values must have equal count';
+    return;
+  }
+  const n = weights.length;
+  const dp = Array.from({length:n+1}, ()=>new Array(W+1).fill(0));
+
+  // Build table UI
+  const tbl = document.getElementById('ks-table');
+  tbl.innerHTML = '';
+  // Header row
+  const hdr = document.createElement('tr');
+  hdr.innerHTML = '<th>i\\W</th>' + Array.from({length:W+1},(_,j)=>`<th>${j}</th>`).join('');
+  tbl.appendChild(hdr);
+  for (let i=0; i<=n; i++) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<th>${i===0?'0':i} ${i>0?`(w=${weights[i-1]},v=${values[i-1]})`:''}` + Array.from({length:W+1},(_,j)=>`<td id="kc-${i}-${j}">0</td>`).join('');
+    tbl.appendChild(tr);
+  }
+
+  // Animate filling
+  for (let i=1; i<=n; i++) {
+    for (let j=0; j<=W; j++) {
+      if (weights[i-1] <= j) {
+        dp[i][j] = Math.max(dp[i-1][j], values[i-1] + dp[i-1][j-weights[i-1]]);
+      } else {
+        dp[i][j] = dp[i-1][j];
+      }
+      const cell = document.getElementById(`kc-${i}-${j}`);
+      cell.textContent = dp[i][j];
+      cell.classList.add('active');
+      document.getElementById('dp-msg').textContent = `Item ${i} (w=${weights[i-1]}, v=${values[i-1]}), capacity=${j}: dp[${i}][${j}]=${dp[i][j]}`;
+      await sleep(60);
+      cell.classList.remove('active');
+      cell.classList.add('computed');
+    }
+  }
+
+  // Backtrack to find items
+  let i=n, w=W; const taken = [];
+  while (i>0 && w>0) {
+    if (dp[i][w] !== dp[i-1][w]) {
+      taken.push(i);
+      w -= weights[i-1];
+      document.getElementById(`kc-${i}-${w+weights[i-1]}`).classList.add('highlight');
+    }
+    i--;
+  }
+
+  document.getElementById('ks-result').textContent = dp[n][W];
+  document.getElementById('ks-items').textContent = taken.reverse().map(i=>`item${i}`).join(', ') || 'none';
+  document.getElementById('dp-msg').textContent = `✓ Max profit = ${dp[n][W]} | Items: ${taken.map(i=>`item${i}`).join(', ')||'none'}`;
+}
+
+async function backendKnapsackSolve() {
+  try {
+    const weights = document.getElementById('ks-weights').value.split(',').map(Number).filter(Boolean);
+    const values = document.getElementById('ks-values').value.split(',').map(Number).filter(Boolean);
+    const capacity = parseInt(document.getElementById('ks-capacity').value);
+    const data = await apiJson('/api/dp/knapsack/', 'POST', { weights, values, capacity });
+    document.getElementById('ks-result').textContent = data.max_profit;
+    document.getElementById('ks-items').textContent = data.chosen_items.map(i => `item${i + 1}`).join(', ') || 'none';
+    document.getElementById('dp-msg').textContent = `Backend solve: max=${data.max_profit}, duration=${data.duration_ms} ms`;
+    setBackendStatus(`Saved run #${data.run_id}: knapsack solved in ${data.duration_ms} ms.`);
+    refreshBackendHistory();
+  } catch (err) {
+    setBackendStatus(`Knapsack API error: ${err.message}`, true);
+  }
+}
+
+// LCS
+function lcsReset() {
+  document.getElementById('lcs-table').innerHTML = '';
+  document.getElementById('lcs-msg').textContent = 'Configure and press Visualize';
+  document.getElementById('lcs-result').textContent = '—';
+  document.getElementById('lcs-str').textContent = '—';
+}
+
+async function lcsPlay() {
+  const s1 = document.getElementById('lcs-s1').value.trim().toUpperCase();
+  const s2 = document.getElementById('lcs-s2').value.trim().toUpperCase();
+  if (!s1||!s2) return;
+  const m = s1.length, n = s2.length;
+  const dp = Array.from({length:m+1}, ()=>new Array(n+1).fill(0));
+
+  const tbl = document.getElementById('lcs-table');
+  tbl.innerHTML = '';
+  const hdr = document.createElement('tr');
+  hdr.innerHTML = '<th></th><th>ε</th>' + [...s2].map(c=>`<th>${c}</th>`).join('');
+  tbl.appendChild(hdr);
+  const rowLabels = ['ε',...s1];
+  for (let i=0; i<=m; i++) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<th>${rowLabels[i]}</th>` + Array.from({length:n+1},(_,j)=>`<td id="lc-${i}-${j}">0</td>`).join('');
+    tbl.appendChild(tr);
+  }
+
+  for (let i=1; i<=m; i++) {
+    for (let j=1; j<=n; j++) {
+      if (s1[i-1]===s2[j-1]) dp[i][j] = dp[i-1][j-1]+1;
+      else dp[i][j] = Math.max(dp[i-1][j], dp[i][j-1]);
+      const cell = document.getElementById(`lc-${i}-${j}`);
+      cell.textContent = dp[i][j];
+      cell.classList.add('active');
+      document.getElementById('lcs-msg').textContent = `s1[${i-1}]='${s1[i-1]}', s2[${j-1}]='${s2[j-1]}': ${s1[i-1]===s2[j-1]?`Match! dp=${dp[i][j]}`:`No match, dp=${dp[i][j]}`}`;
+      await sleep(60);
+      cell.classList.remove('active');
+      cell.classList.add('computed');
+    }
+  }
+
+  // Backtrack
+  let i=m, j=n, lcs='';
+  while (i>0&&j>0) {
+    if (s1[i-1]===s2[j-1]) {
+      lcs = s1[i-1]+lcs;
+      document.getElementById(`lc-${i}-${j}`).classList.add('highlight');
+      i--; j--;
+    } else if (dp[i-1][j]>dp[i][j-1]) i--;
+    else j--;
+  }
+
+  document.getElementById('lcs-result').textContent = dp[m][n];
+  document.getElementById('lcs-str').textContent = lcs || '(empty)';
+  document.getElementById('lcs-msg').textContent = `✓ LCS length = ${dp[m][n]}, LCS = "${lcs}"`;
+}
+
+async function backendLcsSolve() {
+  try {
+    const s1 = document.getElementById('lcs-s1').value.trim().toUpperCase();
+    const s2 = document.getElementById('lcs-s2').value.trim().toUpperCase();
+    const data = await apiJson('/api/dp/lcs/', 'POST', { s1, s2 });
+    document.getElementById('lcs-result').textContent = data.length;
+    document.getElementById('lcs-str').textContent = data.subsequence || '(empty)';
+    document.getElementById('lcs-msg').textContent = `Backend solve: LCS length=${data.length}, duration=${data.duration_ms} ms`;
+    setBackendStatus(`Saved run #${data.run_id}: lcs solved in ${data.duration_ms} ms.`);
+    refreshBackendHistory();
+  } catch (err) {
+    setBackendStatus(`LCS API error: ${err.message}`, true);
+  }
+}
+
+async function refreshBackendHistory() {
+  try {
+    const data = await apiJson('/api/history/?limit=12');
+    const list = document.getElementById('history-list');
+    if (!data.runs.length) {
+      list.innerHTML = '<li class="history-item">No runs yet.</li>';
+      return;
+    }
+    list.innerHTML = data.runs.map(run => (
+      `<li class="history-item">#${run.id} | ${run.category}/${run.algorithm} | ${run.duration_ms} ms</li>`
+    )).join('');
+  } catch (err) {
+    setBackendStatus(`History API error: ${err.message}`, true);
+  }
+}
+
+function sleep(ms) { return new Promise(r=>setTimeout(r,ms)); }
+
+// ===================== INIT =====================
+window.onload = () => {
+  selectAlgo('bubble');
+  refreshBackendHistory();
+  backendHistoryTimer = setInterval(refreshBackendHistory, 15000);
+};
+
+window.addEventListener('resize', () => {
+  if (currentAlgo === 'merge' && sortSteps.length) renderMergeStep(mergeCurrentStep);
+});
+
+window.addEventListener('beforeunload', () => {
+  if (backendHistoryTimer) clearInterval(backendHistoryTimer);
+});
+</script>
+</body>
+</html>
